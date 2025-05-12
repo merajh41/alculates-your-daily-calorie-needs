@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calorie & Diet Planner</title>
+  <style>
+    /* Bold, modern reset */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1e1e2f;
+      color: #f0f0f5;
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container {
+      background: #27293d;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      max-width: 400px;
+      width: 100%;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 1.8rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #ffbb33;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      margin-top: 0.4rem;
+      padding: 0.6rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    input, select {
+      background: #1e1e2f;
+      color: #f0f0f5;
+      border: 1px solid #444559;
+    }
+    button {
+      background: #ffbb33;
+      color: #1e1e2f;
+      font-weight: bold;
+      margin-top: 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #e6a800;
+    }
+    .results, .suggestions {
+      margin-top: 2rem;
+      background: #1e1e2f;
+      padding: 1rem;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .results p {
+      margin-bottom: 0.6rem;
+      line-height: 1.4;
+    }
+    .food-item {
+      padding: 0.6rem;
+      border-bottom: 1px solid #444559;
+    }
+    .food-item:last-child { border-bottom: none; }
+    .food-name { font-weight: bold; color: #ffbb33; }
+    .food-detail { font-size: 0.9rem; color: #ccc; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Diet Planner</h1>
+    <form id="planner-form">
+      <label for="gender">Gender</label>
+      <select id="gender" required>
+        <option value="">Select…</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+
+      <label for="weight">Weight (kg)</label>
+      <input type="number" id="weight" min="1" step="0.1" required />
+
+      <label for="height">Height (cm)</label>
+      <input type="number" id="height" min="1" step="0.1" required />
+
+      <label for="age">Age (years)</label>
+      <input type="number" id="age" min="1" required />
+
+      <label for="budget">Budget per item (₹)</label>
+      <input type="number" id="budget" min="1" required />
+
+      <button type="submit">Calculate & Suggest</button>
+    </form>
+
+    <div class="results" id="results" style="display:none;">
+      <p><strong>Daily Calorie Need:</strong> <span id="calorie-need"></span> kcal</p>
+      <p><strong>BMR (Basal Metabolic Rate):</strong> <span id="bmr-value"></span> kcal/day</p>
+    </div>
+
+    <div class="suggestions" id="suggestions" style="display:none;">
+      <h2 style="color:#ffbb33; margin-bottom:0.8rem;">Food Suggestions</h2>
+      <div id="food-list"></div>
+    </div>
+  </div>
+
+  <script>
+    // sample food database
+    const foods = [
+      { name: 'Apple (1 pc)', kcal: 95, cost: 20 },
+      { name: 'Banana (1 pc)', kcal: 105, cost: 10 },
+      { name: 'Boiled Egg (1)', kcal: 78, cost: 8 },
+      { name: 'Paneer (100g)', kcal: 265, cost: 50 },
+      { name: 'Grilled Chicken (100g)', kcal: 165, cost: 100 },
+      { name: 'Cooked Rice (150g)', kcal: 200, cost: 30 },
+      { name: 'Whole Wheat Bread (1 slice)', kcal: 80, cost: 5 },
+      { name: 'Dal (100g)', kcal: 150, cost: 60 },
+      { name: 'Oats (50g)', kcal: 190, cost: 25 },
+      { name: 'Peanut Butter (1 tbsp)', kcal: 94, cost: 15 }
+    ];
+
+    document.getElementById('planner-form').addEventListener('submit', function(e){
+      e.preventDefault();
+      // gather inputs
+      const gender = document.getElementById('gender').value;
+      const w = parseFloat(document.getElementById('weight').value);
+      const h = parseFloat(document.getElementById('height').value);
+      const age = parseInt(document.getElementById('age').value, 10);
+      const budget = parseFloat(document.getElementById('budget').value);
+
+      // Mifflin-St Jeor BMR formula
+      let bmr = 10*w + 6.25*h - 5*age + (gender==='male'?5:-161);
+      const calorieNeed = Math.round(bmr * 1.2);  // assuming sedentary activity
+
+      // update results UI
+      document.getElementById('bmr-value').textContent = Math.round(bmr);
+      document.getElementById('calorie-need').textContent = calorieNeed;
+      document.getElementById('results').style.display = 'block';
+
+      // filter foods within budget
+      const withinBudget = foods.filter(f => f.cost <= budget);
+      const listEl = document.getElementById('food-list');
+      listEl.innerHTML = '';
+      if (withinBudget.length === 0) {
+        listEl.innerHTML = '<p style="color:#f55;">No items match your budget.</p>';
+      } else {
+        withinBudget.forEach(f => {
+          const div = document.createElement('div');
+          div.className = 'food-item';
+          div.innerHTML = `
+            <div class="food-name">${f.name}</div>
+            <div class="food-detail">${f.kcal} kcal • ₹${f.cost}</div>
+          `;
+          listEl.appendChild(div);
+        });
+      }
+      document.getElementById('suggestions').style.display = 'block';
+    });
+  </script>
+</body>
+</html>
