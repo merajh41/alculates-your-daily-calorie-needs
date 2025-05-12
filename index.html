@@ -70,10 +70,10 @@
         <option value="1.9">Extra Active</option>
       </select>
 
-      <label for="budget">Budget per item (₹)</label>
-      <input type="number" id="budget" min="1" required />
+      <label for="daily-budget">Daily Budget (₹)</label>
+      <input type="number" id="daily-budget" min="1" required />
 
-      <label for="macro-carb">Carbs %</label>
+      <label for="macro-carb">Carbs %</nlabel>
       <input type="number" id="macro-carb" min="0" max="100" value="50" required />
       <label for="macro-pro">Protein %</label>
       <input type="number" id="macro-pro" min="0" max="100" value="20" required />
@@ -113,10 +113,8 @@
   </div>
 
   <script>
-    // Load state
     let customFoods = JSON.parse(localStorage.getItem('customFoods')||'[]');
     let loggedExercises = JSON.parse(localStorage.getItem('exercises')||'[]');
-
     const foods = [
       { name:'Apple (1 pc)', kcal:95, cost:20 },
       { name:'Banana (1 pc)', kcal:105, cost:10 },
@@ -129,11 +127,8 @@
       { name:'Oats (50g)', kcal:190, cost:25 },
       { name:'PB (1 tbsp)', kcal:94, cost:15 }
     ];
-
     function saveCustom() { localStorage.setItem('customFoods', JSON.stringify(customFoods)); }
     function saveExercises() { localStorage.setItem('exercises', JSON.stringify(loggedExercises)); }
-
-    // Planner
     document.getElementById('planner-form').addEventListener('submit', function(e){
       e.preventDefault();
       const g=document.getElementById('gender').value;
@@ -141,96 +136,19 @@
       const h=parseFloat(document.getElementById('height').value);
       const a=parseInt(document.getElementById('age').value,10);
       const act=parseFloat(document.getElementById('activity').value);
-      const b=parseFloat(document.getElementById('budget').value);
+      const budget=parseFloat(document.getElementById('daily-budget').value);
       const carb=parseFloat(document.getElementById('macro-carb').value);
       const pro=parseFloat(document.getElementById('macro-pro').value);
       const fat=parseFloat(document.getElementById('macro-fat').value);
       if(carb+pro+fat!==100){ alert('Macros must sum to 100%'); return; }
-
-      // BMR & calorie need
       let bmr=10*w+6.25*h-5*a+(g==='male'?5:-161);
       let need=Math.round(bmr*act);
-
-      // Macro grams
       const carbsG=Math.round((need*(carb/100))/4);
       const protG=Math.round((need*(pro/100))/4);
       const fatG=Math.round((need*(fat/100))/9);
-
-      // Display results
       document.getElementById('bmr-value').textContent=Math.round(bmr);
       document.getElementById('calorie-need').textContent=need;
       document.getElementById('macro-targets').textContent=
         `Carbs: ${carbsG}g, Protein: ${protG}g, Fat: ${fatG}g`;
       document.getElementById('results').style.display='block';
-
-      // Food suggestions
-      const allFoods=[...foods,...customFoods];
-      const within=allFoods.filter(f=>f.cost<=b);
-      const list=document.getElementById('food-list'); list.innerHTML='';
-      if(within.length===0) list.innerHTML='<p>No budget items.</p>';
-      else within.forEach(f=>{
-        const div=document.createElement('div'); div.className='food-item';
-        div.innerHTML=`<div class="item-name">${f.name}</div>
-                       <div class="item-detail">${f.kcal} kcal • ₹${f.cost}</div>`;
-        list.appendChild(div);
-      });
-      document.getElementById('suggestions').style.display='block';
-
-      // Exercise section
-      renderExercises();
-      document.getElementById('exercises').style.display='block';
-
-      // Save form state
-      localStorage.setItem('formState', JSON.stringify({g,w,h,a,act,b,carb,pro,fat}));
-    });
-
-    // Custom food
-    document.getElementById('add-custom').addEventListener('click',()=>{
-      const n=document.getElementById('custom-name').value.trim();
-      const k=parseInt(document.getElementById('custom-kcal').value,10);
-      const c=parseFloat(document.getElementById('custom-cost').value);
-      if(!n||isNaN(k)||isNaN(c)) return;
-      customFoods.push({name:n,kcal:k,cost:c}); saveCustom();
-      document.getElementById('custom-name').value='';
-      document.getElementById('custom-kcal').value='';
-      document.getElementById('custom-cost').value='';
-      document.getElementById('planner-form').dispatchEvent(new Event('submit'));
-    });
-
-    // Exercise logging
-    document.getElementById('add-exercise').addEventListener('click',()=>{
-      const n=document.getElementById('exercise-name').value.trim();
-      const k=parseInt(document.getElementById('exercise-cal').value,10);
-      if(!n||isNaN(k)) return;
-      loggedExercises.push({name:n,cal:k}); saveExercises();
-      document.getElementById('exercise-name').value='';
-      document.getElementById('exercise-cal').value='';
-      renderExercises();
-    });
-
-    function renderExercises(){
-      const list=document.getElementById('exercise-list'); list.innerHTML='';
-      let total=0;
-      loggedExercises.forEach(e=>{
-        total+=e.cal;
-        const div=document.createElement('div'); div.className='exercise-item';
-        div.innerHTML=`<div class="item-name">${e.name}</div>
-                       <div class="item-detail">${e.cal} kcal burned</div>`;
-        list.appendChild(div);
-      });
-      document.getElementById('total-burned').textContent=total;
-    }
-
-    // Restore form
-    window.onload=()=>{
-      const state=JSON.parse(localStorage.getItem('formState')||'null');
-      if(state){ Object.keys(state).forEach(k=> document.getElementById({
-        g:'gender',w:'weight',h:'height',a:'age',act:'activity',b:'budget',
-        carb:'macro-carb',pro:'macro-pro',fat:'macro-fat'
-      }[k]).value=state[k]);
-        document.getElementById('planner-form').dispatchEvent(new Event('submit'));
-      }
-    };
-  </script>
-</body>
-</html>
+      const allFoods=[...
