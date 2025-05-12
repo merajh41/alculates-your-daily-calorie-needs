@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Calorie & Diet Planner</title>
   <style>
-    /* Bold, modern reset */
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -13,7 +12,7 @@
       color: #f0f0f5;
       display: flex;
       justify-content: center;
-      align-items: start;
+      align-items: flex-start;
       min-height: 100vh;
       padding: 2rem;
     }
@@ -21,64 +20,25 @@
       background: #27293d;
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-      max-width: 400px;
+      max-width: 600px;
       width: 100%;
       padding: 2rem;
-    }
-    h1 {
-      font-size: 1.8rem;
-      text-align: center;
-      margin-bottom: 1.5rem;
-      color: #ffbb33;
-    }
-    label {
-      display: block;
-      margin-top: 1rem;
-      font-weight: bold;
-    }
-    input, select, button {
-      width: 100%;
-      margin-top: 0.4rem;
-      padding: 0.6rem;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-    input, select {
-      background: #1e1e2f;
-      color: #f0f0f5;
-      border: 1px solid #444559;
-    }
-    button {
-      background: #ffbb33;
-      color: #1e1e2f;
-      font-weight: bold;
-      margin-top: 1.5rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover {
-      background: #e6a800;
-    }
-    .results, .suggestions {
-      margin-top: 2rem;
-      background: #1e1e2f;
-      padding: 1rem;
-      border-radius: 8px;
-      max-height: 300px;
       overflow-y: auto;
+      max-height: 90vh;
     }
-    .results p {
-      margin-bottom: 0.6rem;
-      line-height: 1.4;
-    }
-    .food-item {
-      padding: 0.6rem;
-      border-bottom: 1px solid #444559;
-    }
-    .food-item:last-child { border-bottom: none; }
-    .food-name { font-weight: bold; color: #ffbb33; }
-    .food-detail { font-size: 0.9rem; color: #ccc; }
+    h1 { font-size:1.8rem; text-align:center; margin-bottom:1.5rem; color:#ffbb33; }
+    label { display:block; margin-top:1rem; font-weight:bold; }
+    input, select, button { width:100%; margin-top:0.4rem; padding:0.6rem; border:none; border-radius:6px; font-size:1rem; }
+    input, select { background:#1e1e2f; color:#f0f0f5; border:1px solid #444559; }
+    button { background:#ffbb33; color:#1e1e2f; font-weight:bold; margin-top:1.5rem; cursor:pointer; transition:background 0.2s; }
+    button:hover { background:#e6a800; }
+    .section { margin-top:2rem; padding:1rem; background:#1e1e2f; border-radius:8px; }
+    .section h2 { color:#ffbb33; margin-bottom:0.8rem; }
+    .results p { margin-bottom:0.6rem; line-height:1.4; }
+    .food-item, .exercise-item { padding:0.6rem; border-bottom:1px solid #444559; }
+    .food-item:last-child, .exercise-item:last-child { border-bottom:none; }
+    .item-name { font-weight:bold; color:#ffbb33; }
+    .item-detail { font-size:0.9rem; color:#ccc; }
   </style>
 </head>
 <body>
@@ -101,75 +61,176 @@
       <label for="age">Age (years)</label>
       <input type="number" id="age" min="1" required />
 
+      <label for="activity">Activity Level</label>
+      <select id="activity" required>
+        <option value="1.2">Sedentary</option>
+        <option value="1.375">Lightly Active</option>
+        <option value="1.55">Moderately Active</option>
+        <option value="1.725">Very Active</option>
+        <option value="1.9">Extra Active</option>
+      </select>
+
       <label for="budget">Budget per item (₹)</label>
       <input type="number" id="budget" min="1" required />
+
+      <label for="macro-carb">Carbs %</label>
+      <input type="number" id="macro-carb" min="0" max="100" value="50" required />
+      <label for="macro-pro">Protein %</label>
+      <input type="number" id="macro-pro" min="0" max="100" value="20" required />
+      <label for="macro-fat">Fat %</label>
+      <input type="number" id="macro-fat" min="0" max="100" value="30" required />
 
       <button type="submit">Calculate & Suggest</button>
     </form>
 
-    <div class="results" id="results" style="display:none;">
-      <p><strong>Daily Calorie Need:</strong> <span id="calorie-need"></span> kcal</p>
-      <p><strong>BMR (Basal Metabolic Rate):</strong> <span id="bmr-value"></span> kcal/day</p>
+    <div class="section results" id="results" style="display:none;">
+      <h2>Results</h2>
+      <p><strong>BMR:</strong> <span id="bmr-value"></span> kcal/day</p>
+      <p><strong>Calorie Need:</strong> <span id="calorie-need"></span> kcal/day</p>
+      <p><strong>Macros:</strong> <span id="macro-targets"></span></p>
     </div>
 
-    <div class="suggestions" id="suggestions" style="display:none;">
-      <h2 style="color:#ffbb33; margin-bottom:0.8rem;">Food Suggestions</h2>
+    <div class="section suggestions" id="suggestions" style="display:none;">
+      <h2>Food Suggestions</h2>
       <div id="food-list"></div>
+      <h2 style="margin-top:1.5rem;">Add Custom Food</h2>
+      <label>Name</label><input type="text" id="custom-name" placeholder="e.g. Almonds (30g)" />
+      <label>Calories</label><input type="number" id="custom-kcal" />
+      <label>Cost (₹)</label><input type="number" id="custom-cost" />
+      <button id="add-custom">Add to Suggestions</button>
+    </div>
+
+    <div class="section exercises" id="exercises" style="display:none;">
+      <h2>Exercise Log</h2>
+      <label for="exercise-name">Exercise</label>
+      <input type="text" id="exercise-name" placeholder="e.g. Running (30 min)" />
+      <label for="exercise-cal">Calories Burned</label>
+      <input type="number" id="exercise-cal" placeholder="kcal" />
+      <button id="add-exercise">Log Exercise</button>
+      <div id="exercise-list" style="margin-top:1rem;"></div>
+      <p style="margin-top:1rem;"><strong>Total Burned:</strong> <span id="total-burned">0</span> kcal</p>
     </div>
   </div>
 
   <script>
-    // sample food database
+    // Load state
+    let customFoods = JSON.parse(localStorage.getItem('customFoods')||'[]');
+    let loggedExercises = JSON.parse(localStorage.getItem('exercises')||'[]');
+
     const foods = [
-      { name: 'Apple (1 pc)', kcal: 95, cost: 20 },
-      { name: 'Banana (1 pc)', kcal: 105, cost: 10 },
-      { name: 'Boiled Egg (1)', kcal: 78, cost: 8 },
-      { name: 'Paneer (100g)', kcal: 265, cost: 50 },
-      { name: 'Grilled Chicken (100g)', kcal: 165, cost: 100 },
-      { name: 'Cooked Rice (150g)', kcal: 200, cost: 30 },
-      { name: 'Whole Wheat Bread (1 slice)', kcal: 80, cost: 5 },
-      { name: 'Dal (100g)', kcal: 150, cost: 60 },
-      { name: 'Oats (50g)', kcal: 190, cost: 25 },
-      { name: 'Peanut Butter (1 tbsp)', kcal: 94, cost: 15 }
+      { name:'Apple (1 pc)', kcal:95, cost:20 },
+      { name:'Banana (1 pc)', kcal:105, cost:10 },
+      { name:'Boiled Egg (1)', kcal:78, cost:8 },
+      { name:'Paneer (100g)', kcal:265, cost:50 },
+      { name:'Grilled Chicken (100g)', kcal:165, cost:100 },
+      { name:'Rice (150g)', kcal:200, cost:30 },
+      { name:'Bread (1 slice)', kcal:80, cost:5 },
+      { name:'Dal (100g)', kcal:150, cost:60 },
+      { name:'Oats (50g)', kcal:190, cost:25 },
+      { name:'PB (1 tbsp)', kcal:94, cost:15 }
     ];
 
+    function saveCustom() { localStorage.setItem('customFoods', JSON.stringify(customFoods)); }
+    function saveExercises() { localStorage.setItem('exercises', JSON.stringify(loggedExercises)); }
+
+    // Planner
     document.getElementById('planner-form').addEventListener('submit', function(e){
       e.preventDefault();
-      // gather inputs
-      const gender = document.getElementById('gender').value;
-      const w = parseFloat(document.getElementById('weight').value);
-      const h = parseFloat(document.getElementById('height').value);
-      const age = parseInt(document.getElementById('age').value, 10);
-      const budget = parseFloat(document.getElementById('budget').value);
+      const g=document.getElementById('gender').value;
+      const w=parseFloat(document.getElementById('weight').value);
+      const h=parseFloat(document.getElementById('height').value);
+      const a=parseInt(document.getElementById('age').value,10);
+      const act=parseFloat(document.getElementById('activity').value);
+      const b=parseFloat(document.getElementById('budget').value);
+      const carb=parseFloat(document.getElementById('macro-carb').value);
+      const pro=parseFloat(document.getElementById('macro-pro').value);
+      const fat=parseFloat(document.getElementById('macro-fat').value);
+      if(carb+pro+fat!==100){ alert('Macros must sum to 100%'); return; }
 
-      // Mifflin-St Jeor BMR formula
-      let bmr = 10*w + 6.25*h - 5*age + (gender==='male'?5:-161);
-      const calorieNeed = Math.round(bmr * 1.2);  // assuming sedentary activity
+      // BMR & calorie need
+      let bmr=10*w+6.25*h-5*a+(g==='male'?5:-161);
+      let need=Math.round(bmr*act);
 
-      // update results UI
-      document.getElementById('bmr-value').textContent = Math.round(bmr);
-      document.getElementById('calorie-need').textContent = calorieNeed;
-      document.getElementById('results').style.display = 'block';
+      // Macro grams
+      const carbsG=Math.round((need*(carb/100))/4);
+      const protG=Math.round((need*(pro/100))/4);
+      const fatG=Math.round((need*(fat/100))/9);
 
-      // filter foods within budget
-      const withinBudget = foods.filter(f => f.cost <= budget);
-      const listEl = document.getElementById('food-list');
-      listEl.innerHTML = '';
-      if (withinBudget.length === 0) {
-        listEl.innerHTML = '<p style="color:#f55;">No items match your budget.</p>';
-      } else {
-        withinBudget.forEach(f => {
-          const div = document.createElement('div');
-          div.className = 'food-item';
-          div.innerHTML = `
-            <div class="food-name">${f.name}</div>
-            <div class="food-detail">${f.kcal} kcal • ₹${f.cost}</div>
-          `;
-          listEl.appendChild(div);
-        });
-      }
-      document.getElementById('suggestions').style.display = 'block';
+      // Display results
+      document.getElementById('bmr-value').textContent=Math.round(bmr);
+      document.getElementById('calorie-need').textContent=need;
+      document.getElementById('macro-targets').textContent=
+        `Carbs: ${carbsG}g, Protein: ${protG}g, Fat: ${fatG}g`;
+      document.getElementById('results').style.display='block';
+
+      // Food suggestions
+      const allFoods=[...foods,...customFoods];
+      const within=allFoods.filter(f=>f.cost<=b);
+      const list=document.getElementById('food-list'); list.innerHTML='';
+      if(within.length===0) list.innerHTML='<p>No budget items.</p>';
+      else within.forEach(f=>{
+        const div=document.createElement('div'); div.className='food-item';
+        div.innerHTML=`<div class="item-name">${f.name}</div>
+                       <div class="item-detail">${f.kcal} kcal • ₹${f.cost}</div>`;
+        list.appendChild(div);
+      });
+      document.getElementById('suggestions').style.display='block';
+
+      // Exercise section
+      renderExercises();
+      document.getElementById('exercises').style.display='block';
+
+      // Save form state
+      localStorage.setItem('formState', JSON.stringify({g,w,h,a,act,b,carb,pro,fat}));
     });
+
+    // Custom food
+    document.getElementById('add-custom').addEventListener('click',()=>{
+      const n=document.getElementById('custom-name').value.trim();
+      const k=parseInt(document.getElementById('custom-kcal').value,10);
+      const c=parseFloat(document.getElementById('custom-cost').value);
+      if(!n||isNaN(k)||isNaN(c)) return;
+      customFoods.push({name:n,kcal:k,cost:c}); saveCustom();
+      document.getElementById('custom-name').value='';
+      document.getElementById('custom-kcal').value='';
+      document.getElementById('custom-cost').value='';
+      document.getElementById('planner-form').dispatchEvent(new Event('submit'));
+    });
+
+    // Exercise logging
+    document.getElementById('add-exercise').addEventListener('click',()=>{
+      const n=document.getElementById('exercise-name').value.trim();
+      const k=parseInt(document.getElementById('exercise-cal').value,10);
+      if(!n||isNaN(k)) return;
+      loggedExercises.push({name:n,cal:k}); saveExercises();
+      document.getElementById('exercise-name').value='';
+      document.getElementById('exercise-cal').value='';
+      renderExercises();
+    });
+
+    function renderExercises(){
+      const list=document.getElementById('exercise-list'); list.innerHTML='';
+      let total=0;
+      loggedExercises.forEach(e=>{
+        total+=e.cal;
+        const div=document.createElement('div'); div.className='exercise-item';
+        div.innerHTML=`<div class="item-name">${e.name}</div>
+                       <div class="item-detail">${e.cal} kcal burned</div>`;
+        list.appendChild(div);
+      });
+      document.getElementById('total-burned').textContent=total;
+    }
+
+    // Restore form
+    window.onload=()=>{
+      const state=JSON.parse(localStorage.getItem('formState')||'null');
+      if(state){ Object.keys(state).forEach(k=> document.getElementById({
+        g:'gender',w:'weight',h:'height',a:'age',act:'activity',b:'budget',
+        carb:'macro-carb',pro:'macro-pro',fat:'macro-fat'
+      }[k]).value=state[k]);
+        document.getElementById('planner-form').dispatchEvent(new Event('submit'));
+      }
+    };
   </script>
 </body>
 </html>
